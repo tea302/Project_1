@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: trading_network
+    ports:
+      - "5432:5432"
+    container_name: retail_db
+    restart: always
+    healthcheck:
+      test: pg_isready -U postgres -d trading_network
+      interval: 3s
+      timeout: 3s
+      retries: 3
+
+  migrations:
+    build:
+      context: .
+    container_name: migrations
+    env_file:
+      - .env
+    command: >
+      sh -c "./manage.py migrate"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+    container_name: api
+    env_file:
+      - .env
+    command: >
+      sh -c "./manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrations:
+        condition: service_started
+    volumes:
+      - ./:/retail_app/
+      - .static:/retail_app/static
