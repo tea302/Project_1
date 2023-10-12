@@ -1,4 +1,4 @@
-# custom filterset class
+
 from typing import Type
 
 from django_filters.rest_framework import filters
